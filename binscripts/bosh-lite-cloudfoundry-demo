@@ -21,7 +21,7 @@ STEMCELL_NAME=${STEMCELL_NAME:-bosh-stemcell-51-warden-boshlite-ubuntu.tgz}
 APPLICATION_URL=${APPLICATION_URL:-https://github.com/cloudfoundry-community/cf-env.git}
 APPLICATION_NAME=${APPLICATION_NAME:-cf-env}
 
-WORKSPACE_DIR=${WORKSPACE_DIR:-$HOME/bosh-lite-install}
+WORKSPACE_DIR=${WORKSPACE_DIR:-$HOME/bosh-lite-tutorial}
 PROJECT_NAME=cf-release
 RELEASE_NAME=cf
 RELEASE_DIR=$WORKSPACE_DIR/$PROJECT_NAME-$RELEASE_VERSION
