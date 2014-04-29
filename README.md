@@ -37,7 +37,7 @@ bosh-lite performs all the same functions except entirely within your laptop, an
 
 **What can I deploy with BOSH?** You can deploy any system, assuming your system is a collection processes to be run on virtual machines. Either you write new BOSH releases for your own software/systems; or you use pre-existing BOSH releases from the community. Try Googling for "boshrelease" or visit [https://github.com/cloudfoundry-community](https://github.com/cloudfoundry-community)
 
-There are a number of open source BOSH release projects for running open source systems ([redis](https://github.com/cloudfoundry-community/redis-boshrelease), [etcd](https://github.com/cloudfoundry-community/etcd-boshrelease), [jenkins](https://github.com/cloudfoundry-community/jenkins-boshrelease), [gitlab](https://github.com/drnic/gitlab-boshrelease))
+There are a number of open source BOSH release projects for running open source systems ([redis](https://github.com/cloudfoundry-community/redis-boshrelease), [etcd](https://github.com/cloudfoundry-community/etcd-boshrelease), [jenkins](https://github.com/cloudfoundry-community/jenkins-boshrelease), [gitlab](https://github.com/drnic/gitlabhq-boshrelease))
 
 ## Quick Start
 
