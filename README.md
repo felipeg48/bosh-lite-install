@@ -55,7 +55,7 @@ If the script ever fails, re-run it and it will skip over any steps that were al
 
 For bosh-lite to boot up, it has the following requirements:
 
-* Vagrant/Virtualbox 1.4+ - for booting the bosh-lite virtual machine on your laptop
+* [Vagrant](http://www.vagrantup.com/downloads.html)/[Virtualbox 1.4+](https://www.virtualbox.org/wiki/Downloads) - for booting the bosh-lite virtual machine on your laptop
 * Ruby 1.9.3 - for the BOSH CLI
 
 The installer script uses the following to get some assets:
@@ -64,20 +64,42 @@ The installer script uses the following to get some assets:
 
 To deploy Cloud Foundry and then talk to Cloud Foundry as an administrator/user:
 
-* spiff - used to construct a large YAML file used to deploy BOSH releases
-* cf - Cloud Foundry's own CLI for users and admins
+* [spiff](https://github.com/cloudfoundry-incubator/spiff/releases) - used to construct a large YAML file used to deploy BOSH releases
+* [cf](https://github.com/cloudfoundry/cli#downloading-edge) - Cloud Foundry's own CLI for users and admins
 
 The installer script will test for the existence of these requirements. It's currently not clever enough to check for versions, so you will be prompted to confirm you have the right versions.
 
 ## Concepts
 
-The Quick Start will take a while. Or a long time if you have slow internet, downloading the 2G of bits and bobs.
+The Quick Start will take a while. Or a long time if you have slow internet, downloading the 2G of bits and blobs.
 
 Let's learn something about BOSH.
 
-### Servers, VMs and jobs
+### Understanding BOSH
+BOSH is an open source tool chain for release engineering, deployment, and lifecycle management of large-scale distributed services.
 
-Concept number one is the Server. Also known as virtual machines, VMs, or `vms`.
+Every BOSH deployment consists of three parts: a stemcell, a release, and a manifest.
+
+####Stemcell
+
+A stemcell is a VM template. BOSH clones new VMs from the stemcell to create the VMs needed for a deployment. A stemcell contains an OS and an embedded BOSH Agent that allows BOSH to control VMs cloned from the stemcell.
+
+VMs cloned from a single stemcell can be configured with different CPU, memory, storage, and network settings, and can have different software packages installed. Stemcell are tied to specific cloud infrastructures.
+
+####Release
+
+A BOSH release is a collection of source code, configuration files, and startup scripts, with a version number that identifies these components. A BOSH release consists of the software packages to be installed and the processes, or jobs, to run on the VMs in a deployment.
+
+A package contains source code and a script for compiling and installing the package, with optional dependencies on other packages.
+A job is a set of configuration files and scripts to run the binaries from a package.
+
+####Manifest
+
+The BOSH deployment manifest is a YAML file defining the layout and properties of the deployment. When a BOSH operator initiates a new deployment using the BOSH CLI, the BOSH Director receives a version of the deployment manifest and creates a new deployment using this manifest. The manifest describes the configuration of the cloud infrastructure, network architecture, and VM types, including which operating system each VM runs.
+
+### BOSH Documentation
+
+Want more? It's all covered [here](http://docs.cloudfoundry.org/bosh/).
 
 ## Slow Start
 
