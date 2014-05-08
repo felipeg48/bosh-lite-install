@@ -44,10 +44,10 @@ There are a number of open source BOSH release projects for running open source 
 During this script, approximately 2G of content is downloaded (Vagrant box, Cloud Foundry source & dependencies, Warden image/stemcell). Also, the first time you run the installer (it can be re-run over and over to upgrade and rebuild), it will compile the source packages of Cloud Foundry one time. If you re-run the script below, these assets will not be downloaded again.
 
 ```
-curl https://raw2.github.com/cloudfoundry-community/bosh-lite-demo/master/binscripts/bosh-lite-cloudfoundry-demo | bash
+curl https://raw2.github.com/pivotalservices/bosh-lite-installer/master/binscripts/bosh-lite-cloudfoundry-demo | bash
 ```
 
-You may you want to [read through this script](https://github.com/pivotalservices/bosh-lite-install/blob/update-cf-boshrelease/binscripts/bosh-lite-cloudfoundry-demo) first.
+You may you want to [read through this script](https://github.com/pivotalservices/bosh-lite-installer/blob/update-cf-boshrelease/binscripts/bosh-lite-cloudfoundry-demo) first.
 
 If the script ever fails, re-run it and it will skip over any steps that were already successfully.
 

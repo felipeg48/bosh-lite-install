@@ -13,7 +13,7 @@ set +x
 ##
 ## Dependency locations
 ##
-BOSH_LITE_REPO=${BOSH_LITE_REPO:-https://github.com/cloudfoundry/bosh-lite.git}
+CF_MYSQL_REPO=${CF_MYSQL_REPO:-https://github.com/cloudfoundry/cf-mysql-release.git}
 RELEASE_VERSION=${RELEASE_VERSION:-169}
 RELEASE_TGZ_URL=${RELEASE_TGZ:-https://github.com/cloudfoundry/cf-release/archive/v$RELEASE_VERSION.tar.gz}
 STEMCELL_NAME=${STEMCELL_NAME:-bosh-stemcell-51-warden-boshlite-ubuntu.tgz}
@@ -21,8 +21,8 @@ STEMCELL_NAME=${STEMCELL_NAME:-bosh-stemcell-51-warden-boshlite-ubuntu.tgz}
 APPLICATION_URL=${APPLICATION_URL:-https://github.com/cloudfoundry-community/cf-env.git}
 APPLICATION_NAME=${APPLICATION_NAME:-cf-env}
 
-WORKSPACE_DIR=${WORKSPACE_DIR:-$HOME/bosh-lite-tutorial}
-PROJECT_NAME=cf-release
+WORKSPACE_DIR=${WORKSPACE_DIR:-$HOME/workspace/cf-mysql-release}
+PROJECT_NAME=cf-mysql-release
 RELEASE_NAME=cf
 RELEASE_DIR=$WORKSPACE_DIR/$PROJECT_NAME-$RELEASE_VERSION
 SOURCE_RELEASE_TGZ=$WORKSPACE_DIR/$PROJECT_NAME-v$RELEASE_VERSION.tar.gz

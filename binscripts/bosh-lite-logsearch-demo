@@ -14,7 +14,7 @@ set +x
 ## Dependency locations
 ##
 BOSH_LITE_REPO=${BOSH_LITE_REPO:-https://github.com/cloudfoundry/bosh-lite.git}
-RELEASE_VERSION=${RELEASE_VERSION:-169}
+RELEASE_VERSION=${RELEASE_VERSION:-8}
 RELEASE_TGZ_URL=${RELEASE_TGZ:-https://github.com/cloudfoundry/cf-release/archive/v$RELEASE_VERSION.tar.gz}
 STEMCELL_NAME=${STEMCELL_NAME:-bosh-stemcell-51-warden-boshlite-ubuntu.tgz}
 
