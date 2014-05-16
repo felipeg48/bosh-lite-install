@@ -7,6 +7,8 @@ echo ">>>>>>>>>> Start time: $(date) <<<<<<<<<<<<"
 export BOSH_RELEASES_DIR=$PWD
 export LOG_FILE=$BOSH_RELEASES_DIR/setup.log
 
+rm -rf $LOG_FILE
+
 echo ">>>>>>>>>> Start time: $(date) <<<<<<<<<<<<" >> $LOG_FILE
 
 export BOSH_USER=admin
@@ -111,8 +113,6 @@ fi
 export CF_RELEASE=cf-$1.yml
 echo "Deploy CF release" $CF_RELEASE
 
-rm -rf $LOG_FILE
-
 echo
 echo "###### Clone Required Git Repositories ######"
 if [ ! -d "bosh-lite" ]; then
@@ -136,10 +136,11 @@ if echo "$RUBY_VERSION_INSTALLED" | grep -q "$EXPECTED_RUBY_VERSION"; then
 	tput sgr 0	
 else	
 	\curl -sSL $RVM_DOWNLOAD_URL | bash >> $LOG_FILE 2>&1
-	`source ~/.rvm/scripts/rvm`
 	if [ $? -gt 0 ]; then
 		echo $PASSWORD | \curl -sSL $RVM_DOWNLOAD_URL | sudo bash >> $LOG_FILE 2>&1
 	fi
+	`source ~/.rvm/scripts/rvm`
+	`type rvm | head -n 1`
 	
 	WHICH_RVM=`which rvm`
 	if [ -z $WHICH_RVM ]; then
@@ -154,7 +155,6 @@ else
 	if [ $? -gt 0 ]; then
 		echo $PASSWORD | sudo -S rvm install $REQUIRED_RUBY_VERSION >> $LOG_FILE 2>&1
 	fi
-	rvm default 1.9.3-p484
 	
 	if [ $? -gt 0 ]; then
 		tput setaf 1
@@ -164,6 +164,9 @@ else
 		exit 1
 	fi	
 fi	
+
+echo "###### Using Ruby $REQUIRED_RUBY_VERSION ######"
+rvm use $REQUIRED_RUBY_VERSION --default
 
 echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
@@ -181,6 +184,7 @@ if [ -z $INSTALLED_BUNDLE_VERSION ]; then
 		tput sgr 0
 		exit 1
 	fi
+	
 fi
 
 echo "###### Installing wget ######"
@@ -207,16 +211,6 @@ fi
 
 echo "###### Bundle bosh-lite ######"
 bundle &> $LOG_FILE 2>&1
-
-echo "###### Update cf-release repo ######"
-cd $BOSH_RELEASES_DIR/cf-release
-./update &> $LOG_FILE
-
-#rvm gemset use bosh-lite
-echo "###### Bundle cf-release ######"
-bundle &> $LOG_FILE 2>&1
-
-cd $BOSH_RELEASES_DIR/bosh-lite
 
 PLUGIN_INSTALLED=false
 VMWARE_PLUGIN_INSTALLED=`vagrant plugin list`
@@ -250,6 +244,10 @@ else
 	vagrant up --provider vmware_fusion >> $LOG_FILE 2>&1
 fi
 
+set +e
+
+rvm gemset use bosh-lite
+
 echo "###### Target BOSH to BOSH director ######"
 bosh target $BOSH_DIRECTOR_URL
 
@@ -260,12 +258,18 @@ echo "###### Set the routing tables ######"
 echo $PASSWORD | sudo -S scripts/add-route >> $LOG_FILE 2>&1
 
 echo "###### Upload stemcell ######"
-bosh upload stemcell $STEM_CELL_TO_INSTALL >> $LOG_FILE 2>&1
+bosh upload stemcell $BOSH_RELEASES_DIR/bosh-lite/$STEM_CELL_TO_INSTALL >> $LOG_FILE 2>&1
 
 STEM_CELL_NAME=$( bosh stemcells | grep -o "bosh-warden-[^[:space:]]*" )
 echo "###### Uploaded stemcell $STEM_CELL_NAME ######"
 
+echo "###### Update cf-release repo ######"
 cd $BOSH_RELEASES_DIR/cf-release
+./update &> $LOG_FILE
+
+rvm gemset use bosh-lite
+echo "###### Bundle cf-release ######"
+bundle &> $LOG_FILE 2>&1
 
 echo "###### Upload cf-release" $CF_RELEASE "######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
