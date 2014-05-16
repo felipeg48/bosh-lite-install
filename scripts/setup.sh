@@ -289,8 +289,8 @@ tput sgr 0
 echo "yes" | bosh deploy &> $LOG_FILE 2>&1
 
 echo "###### Setup cloudfoundry cli ######"
-GO_CF_VERSION=`gcf -v`
-if [ -z GO_CF_VERSION ]; then
+GO_CF_VERSION=`which gcf`
+if [ -z $GO_CF_VERSION ]; then
 	brew install cloudfoundry-cli
 fi
 
