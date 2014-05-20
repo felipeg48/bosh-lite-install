@@ -127,6 +127,15 @@ if [ ! -d "cf-acceptance-tests" ]; then
 	git clone $CF_ACCEPTANCE_TESTS_REPO cf-acceptance-tests >> $LOG_FILE 2>&1
 fi
 
+echo "###### Validate the entered cf version ######"
+if [ ! -f $BOSH_RELEASES_DIR/cf-release/releases/$CF_RELEASE ]; then
+	tput setaf 1
+	echo
+	echo "ERROR: Invalid CF version selected. Please correct and try again"
+	tput sgr 0
+	exit 1
+fi	
+
 echo "###### Install RVM and download the appropriate version of Ruby ######"
 RUBY_VERSION_INSTALLED=`ruby -v`
 
