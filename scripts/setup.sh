@@ -1,5 +1,6 @@
 #!/bin/bash --login
 
+clear
 unset HISTFILE
 
 echo ">>>>>>>>>> Start time: $(date) <<<<<<<<<<<<"
@@ -34,6 +35,31 @@ export EXPECTED_RUBY_VERSION="1.9.3"
 
 export RVM_DOWNLOAD_URL=https://get.rvm.io
 
+logError () {
+	logCustom 1 "ERROR: $1"
+	
+	if [ ! -z $2 ]; then
+		logInfo $2
+	fi	
+
+	echo ">>>>>>>>>> End time: $(date) <<<<<<<<<<<<"
+	exit 1
+}
+
+logSuccess () {
+	logCustom 2 "SUCCESS: $1"	
+}
+
+logInfo () {
+	logCustom 3 "INFO: $1"
+}
+
+logCustom () {
+	tput setaf $1
+	echo "$2"
+	tput sgr 0	
+}
+
 echo "######  Install Open Source CloudFoundry ######"
 if [ $# -ne 2 ]; then
 	echo "Usage: ./setup.sh <cf-release-version> <provider>"
@@ -42,78 +68,62 @@ if [ $# -ne 2 ]; then
 	exit 1
 fi
 
-if [ -z $1 ]; then
-	tput setaf 1
-	echo "ERROR: Please provide the cf release version to deploy"
-	tput sgr 0	
-	exit 1
-fi
-
 if [[ -n ${1//[0-9]/} ]]; then
-	tput setaf 1
-	echo "ERROR: Invalid cf version number, please try again"
-	tput sgr 0	
-	exit 1
+	logError "Invalid cf version number, please try again"
 fi
 
 if [ $2 -eq 1 ] || [ $2 -eq 2 ]; then
 	if [ $2 -eq 1 ]; then 
-		echo "Provider selected : Virtual Box" 
+		logInfo "Provider selected : Virtual Box" 
+		VIRTUAL_BOX_INSTALLED=`which virtualbox`
+		if [ -z $VIRTUAL_BOX_INSTALLED ]; then
+			logError "VirtualBox not installed. Please download and install it from https://www.virtualbox.org/" 
+		fi
 	else 
-		echo "Provider selected : VMWare Fusion."
+		logInfo "Provider selected : VMWare Fusion."
 		if [ ! -f $BOSH_RELEASES_DIR/license.lic ]; then
-			tput setaf 1
-			echo "ERROR: Please place the license.lic file in $BOSH_RELEASES_DIR" 
-			tput setaf 2
-			echo "INFO: Ensure you have the license.lic available. https://www.vagrantup.com/vmware"			
-			tput sgr 0
-			exit 1
+			ERROR_MSG="Please place the license.lic file in $BOSH_RELEASES_DIR" 
+			INFO_MSG="Ensure you have the license.lic available. https://www.vagrantup.com/vmware"			
+			logError ERROR_MSG INFO_MSG
 		fi
 	fi
 else
-	tput setaf 1
-	echo "ERROR: Please provide the valid selection for the provider"
-	tput sgr 0
-	exit 1
+	logError "Please provide the valid selection for the provider"
 fi
 
 read -s -p "Enter Password: " PASSWORD
 if [ -z $PASSWORD ]; then
-	tput setaf 1
-	echo
-	echo "ERROR: Please provide the sudo password"
-	tput sgr 0	
-	exit 1
+	logError "Please provide the sudo password"
 fi
 
+echo
+
 if [ ! -f "$BOSH_RELEASES_DIR/login.sh" ]; then
-	tput setaf 1
-	echo 
-	echo "ERROR: Dude you don't read instructions"
-	tput setaf 3	
-	echo "INFO: Place the login.sh file under $BOSH_RELEASES_DIR/"
-	tput sgr 0
-	exit 1
+	ERROR_MSG="Dude you don't read instructions"
+	INFO_MSG="Place the login.sh file under $BOSH_RELEASES_DIR/"
+	logError ERROR_MSG INFO_MSG
 fi
 
 cmd=`$BOSH_RELEASES_DIR/login.sh $USER $PASSWORD`
 if [[ $cmd == *Sorry* ]]; then
-	tput setaf 1
-	echo
-	echo "ERROR: Invalid password"
-	tput sgr 0
-	exit 1
+	logError "Invalid password"
 else 
-	tput setaf 2
-	echo 
-	echo "SUCCESS: Password Validated"
-	tput sgr 0	
+	logSuccess "Password Validated"
+fi
+
+VAGRANT_VERSION=`which vagrant`
+if [ -z $VAGRANT_VERSION ]; then
+	logError "You don't have Vagrant Installed"
+fi
+
+BREW_INSTALLED=`which brew`
+if [ -z $BREW_INSTALLED ]; then
+	logError "You don't have brew Installed. Please follow the steps in: http://brew.sh"
 fi
 
 export CF_RELEASE=cf-$1.yml
-echo "Deploy CF release" $CF_RELEASE
+logInfo "Deploy CF release" $CF_RELEASE
 
-echo
 echo "###### Clone Required Git Repositories ######"
 if [ ! -d "bosh-lite" ]; then
 	git clone $BOSH_LITE_REPO bosh-lite >> $LOG_FILE 2>&1
@@ -129,20 +139,14 @@ fi
 
 echo "###### Validate the entered cf version ######"
 if [ ! -f $BOSH_RELEASES_DIR/cf-release/releases/$CF_RELEASE ]; then
-	tput setaf 1
-	echo
-	echo "ERROR: Invalid CF version selected. Please correct and try again"
-	tput sgr 0
-	exit 1
+	logError "Invalid CF version selected. Please correct and try again"
 fi	
 
 echo "###### Install RVM and download the appropriate version of Ruby ######"
 RUBY_VERSION_INSTALLED=`ruby -v`
 
 if echo "$RUBY_VERSION_INSTALLED" | grep -q "$EXPECTED_RUBY_VERSION"; then
-	tput setaf 3
-	echo "###### Ruby RubyGems Already Installed ######"
-	tput sgr 0	
+	logInfo "Ruby RubyGems Already Installed"
 else	
 	\curl -sSL $RVM_DOWNLOAD_URL | bash >> $LOG_FILE 2>&1
 	if [ $? -gt 0 ]; then
@@ -153,10 +157,8 @@ else
 	
 	WHICH_RVM=`which rvm`
 	if [ -z $WHICH_RVM ]; then
-		tput setaf 2
-		echo "INFO: Installed RVM now, please close this terminal and open a new terminal"
-		echo "Fire the setup.sh again"
-		tput sgr 0
+		logInfo "Installed RVM now, please close this terminal and open a new terminal"
+		logInfo "Fire the setup.sh again"
 		exit 1		
 	fi
 	
@@ -166,11 +168,7 @@ else
 	fi
 	
 	if [ $? -gt 0 ]; then
-		tput setaf 1
-		echo
-		echo "ERROR: Unable to Install ruby"
-		tput sgr 0
-		exit 1
+		logError "Unable to Install ruby"
 	fi	
 fi	
 
@@ -181,17 +179,13 @@ echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
 if [ -z $INSTALLED_BUNDLE_VERSION ]; then
 	gem install bundler >> $LOG_FILE 2>&1
-	echo "INFO: Installed bundler"
+	logInfo "Installed bundler"
 	if [ $? -gt 0 ]; then
 		echo $PASSWORD | sudo -S gem install bundler >> $LOG_FILE 2>&1
 	fi
 	
 	if [ $? -gt 0 ]; then
-		tput setaf 1
-		echo
-		echo "ERROR: Unable to Install bundler"
-		tput sgr 0
-		exit 1
+		logError "Unable to Install bundler"
 	fi
 	
 fi
@@ -213,9 +207,7 @@ if [ ! -f $STEM_CELL_TO_INSTALL ]; then
     echo "###### Downloading... warden ######"
     wget $STEM_CELL_URL -o $LOG_FILE 2>&1
 else 
-	tput setaf 3
-	echo "###### Skipping warden download, local copy exists ######";
-	tput sgr 0	
+	logInfo "Skipping warden download, local copy exists"
 fi
 
 echo "###### Bundle bosh-lite ######"
@@ -233,18 +225,14 @@ set -e
 echo "###### Vagrant up ######"
 if [ $2 -eq 1 ]; then
 	if [ $PLUGIN_INSTALLED == true ]; then
-		tput setaf 3
-		echo "###### Found VMWare Fusion plugin, uninstalling it ######"
-		tput sgr 0		
+		logInfo "Found VMWare Fusion plugin, uninstalling it"
 		vagrant plugin uninstall vagrant-vmware-fusion
 	fi
 	
 	vagrant up >> $LOG_FILE 2>&1
 else
 	if [ $PLUGIN_INSTALLED == true ]; then
-		tput setaf 3	
-		echo "###### Vagrant Plugin already installed ######"
-		tput sgr 0		
+		logInfo "Vagrant Plugin already installed"
 	else	
 		vagrant plugin install vagrant-vmware-fusion >> $LOG_FILE 2>&1
 		vagrant plugin license vagrant-vmware-fusion $BOSH_RELEASES_DIR/license.lic >> $LOG_FILE 2>&1
@@ -292,10 +280,14 @@ bosh deployment manifests/cf-manifest.yml &> $LOG_FILE 2>&1
 
 #sed -i.bak 's/bosh-warden-boshlite-ubuntu/'"$STEM_CELL_NAME"'/' $PWD/manifests/cf-manifest.yml
 
-tput setaf 9
-echo "###### Deploy CF to BOSH-LITE (THIS WOULD TAKE SOME TIME) ######"
-tput sgr 0
+logCustom 9 "###### Deploy CF to BOSH-LITE (THIS WOULD TAKE SOME TIME) ######"
 echo "yes" | bosh deploy &> $LOG_FILE 2>&1
+
+echo "###### Executing BOSH VMS to ensure all VMS are running ######"
+BOSH_VMS_INSTALLED_SUCCESSFULLY=$( bosh vms | grep -o "failing" )
+if [ ! -z $BOSH_VMS_INSTALLED_SUCCESSFULLY]; then
+	logError "Not all BOSH VMs are up. Please check logs for more info"
+fi
 
 echo "###### Setup cloudfoundry cli ######"
 GO_CF_VERSION=`which gcf`
@@ -304,6 +296,8 @@ if [ -z $GO_CF_VERSION ]; then
 fi
 
 echo $PASSWORD | sudo -S ln -s /usr/local/bin/cf /usr/local/bin/gcf
+
+set -e
 
 echo "###### Setting up cf (Create org, spaces) ######"
 gcf api --skip-ssl-validation $CLOUD_CONTROLLER_URL
@@ -316,6 +310,4 @@ gcf target -o $ORG_NAME -s $SPACE_NAME
 echo ">>>>>>>>>> End time: $(date) <<<<<<<<<<<<"
 echo ">>>>>>>>>> End time: $(date) <<<<<<<<<<<<" >> $LOG_FILE
 
-tput setaf 2
-echo "###### Congratulations: Open Source CloudFoundry setup complete! ######"
-tput sgr 0
+logSuccess "###### Congratulations: Open Source CloudFoundry setup complete! ######"
