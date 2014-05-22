@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 
 clear
 unset HISTFILE
@@ -33,32 +33,15 @@ export STEM_CELL_URL=$AWS_STEM_CELL_URL/$STEM_CELL_TO_INSTALL
 export REQUIRED_RUBY_VERSION=1.9.3-p484
 export EXPECTED_RUBY_VERSION="1.9.3"
 
+export VAGRANT_VERSION=1.6.2
+
 export RVM_DOWNLOAD_URL=https://get.rvm.io
+export VAGRANT_DOWNLOAD_URL=http://d29vzk4ow07wi7.cloudfront.net/6bc40bf82eec0e266fce9f7ab3aafaf82624a7f0?response-content-disposition=attachment%3Bfilename%3D%22vagrant_1.6.2.dmg%22&Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6Imh0dHAqOi8vZDI5dnprNG93MDd3aTcuY2xvdWRmcm9udC5uZXQvNmJjNDBiZjgyZWVjMGUyNjZmY2U5ZjdhYjNhYWZhZjgyNjI0YTdmMD9yZXNwb25zZS1jb250ZW50LWRpc3Bvc2l0aW9uPWF0dGFjaG1lbnQlM0JmaWxlbmFtZSUzRCUyMnZhZ3JhbnRfMS42LjIuZG1nJTIyIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNDAwNzkzNjI2fSwiSXBBZGRyZXNzIjp7IkFXUzpTb3VyY2VJcCI6IjAuMC4wLjAvMCJ9fX1dfQ__&Signature=OYEpYhdsIC363HC4X0eMwKGTljPfRtNsmmlDOR0zf6d41oUmFhkqhSxdiv6jb7RDw3SmbnrjBKvHuHGhZ1Yv~~hs3AJKx6pd~zzyPL9yaGaJ8lyOqRcsZO9rbycVdZtdQAPF6fHFzvzlvxAjtCPfNK09dF0eptmdKQm~5~nNCsRZmOz~Pqm20U4iFibszU343cikpa4X2Udsbmif21D2yg93qvHnmMaOwg~vaEDmwTKv3bCcbHNcw4Kf4xM662Hcuj8cs9oXCfCsPXENuw5YvxoBhV4wGBfrhnBUu34mYfR44ybYSuDe8l0XG9Je7dPCuQa0~TyEkBOYDmhNh7Y7fw__&Key-Pair-Id=APKAIQIOJCQ5764M5VTQ
+export HOMEBREW_DOWNLOAD_URL=https://raw.github.com/Homebrew/homebrew/go/install
 
-logError () {
-	logCustom 1 "ERROR: $1"
-	
-	if [ ! -z $2 ]; then
-		logInfo $2
-	fi	
+export LINUXBREW_GIT_REPO=https://github.com/Homebrew/linuxbrew.git
 
-	echo ">>>>>>>>>> End time: $(date) <<<<<<<<<<<<"
-	exit 1
-}
-
-logSuccess () {
-	logCustom 2 "SUCCESS: $1"	
-}
-
-logInfo () {
-	logCustom 3 "INFO: $1"
-}
-
-logCustom () {
-	tput setaf $1
-	echo "$2"
-	tput sgr 0	
-}
+. logMessages.sh
 
 echo "######  Install Open Source CloudFoundry ######"
 if [ $# -ne 2 ]; then
@@ -111,15 +94,14 @@ else
 	logSuccess "Password Validated"
 fi
 
-VAGRANT_VERSION=`which vagrant`
-if [ -z $VAGRANT_VERSION ]; then
-	logError "You don't have Vagrant Installed"
+OS=`uname`
+
+VAGRANT_INSTALLED=`which vagrant`
+if [ -z $VAGRANT_INSTALLED ]; then
+	logError "You don't have vagrant Installed. I knew you would never read instructions. Install that first and then come back."
 fi
 
-BREW_INSTALLED=`which brew`
-if [ -z $BREW_INSTALLED ]; then
-	logError "You don't have brew Installed. Please follow the steps in: http://brew.sh"
-fi
+./brew_install.sh $OS $PASSWORD
 
 export CF_RELEASE=cf-$1.yml
 logInfo "Deploy CF release" $CF_RELEASE
