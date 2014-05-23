@@ -21,6 +21,6 @@ if [ -z $BREW_INSTALLED ]; then
 fi
 
 GIT_INSTALLED=`which git`
-if [ -z $GIT_INSTALLED ];then
+if [ -z $GIT_INSTALLED ]; then
 	brew install git git-flow
 fi
