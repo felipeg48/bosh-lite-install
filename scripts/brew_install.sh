@@ -19,3 +19,8 @@ if [ -z $BREW_INSTALLED ]; then
 		export LD_LIBRARY_PATH="$HOME/.linuxbrew/lib:$LD_LIBRARY_PATH"
 	fi
 fi
+
+GIT_INSTALLED=`which git`
+if [ -z $GIT_INSTALLED ];then
+	brew install git git-flow
+fi
