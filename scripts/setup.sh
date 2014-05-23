@@ -99,9 +99,6 @@ fi
 
 ./ruby_install.sh $PASSWORD
 
-echo "###### Using Ruby $REQUIRED_RUBY_VERSION ######"
-rvm use $REQUIRED_RUBY_VERSION --default
-
 echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
 if [ -z $INSTALLED_BUNDLE_VERSION ]; then
@@ -121,7 +118,7 @@ echo "###### Installing wget ######"
 brew install wget >> $LOG_FILE 2>&1
 
 echo "###### Install spiff ######"
-brew tap xoebus/homebrew-cloudfoundry
+brew tap xoebus/homebrew-cloudfoundry &> $LOG_FILE 2>&1
 brew install spiff &> $LOG_FILE 2>&1
 
 cd $BOSH_RELEASES_DIR/bosh-lite

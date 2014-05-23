@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash --login
 . logMessages.sh
 
 echo "###### Install RVM and download the appropriate version of Ruby ######"
@@ -25,4 +25,7 @@ else
 	if [ $? -gt 0 ]; then
 		logError "Unable to Install ruby"
 	fi	
-fi	
+fi
+
+echo "###### Using Ruby $REQUIRED_RUBY_VERSION ######"
+rvm use $REQUIRED_RUBY_VERSION --default >> $LOG_FILE 2>&1
