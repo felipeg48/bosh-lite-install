@@ -17,7 +17,7 @@ if [ $2 -eq 1 ] || [ $2 -eq 2 ]; then
 		if [ ! -f $BOSH_RELEASES_DIR/license.lic ]; then
 			ERROR_MSG="Please place the license.lic file in $BOSH_RELEASES_DIR" 
 			INFO_MSG="Ensure you have the license.lic available. https://www.vagrantup.com/vmware"			
-			logError $ERROR_MSG $INFO_MSG
+			logError "$ERROR_MSG" "$INFO_MSG"
 		fi
 	fi
 else
