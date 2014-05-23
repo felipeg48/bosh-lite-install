@@ -6,7 +6,7 @@ Once done, copy all the shell (.sh) files from scripts folder to any directory o
 
 Ensure the script has executable permissions. If not -> chmod +x setup.sh
 
-Before you fire the script, please ensure you have brew install. Refer to http://brew.sh/ for details.
+Before you fire the script, please ensure you have [HomeBrew] (http://brew.sh/) install. If not, the setup script will install it on your behalf.
 
 Install [Vagrant] (http://www.vagrantup.com/)
 
@@ -29,7 +29,7 @@ Usage: ./setup.sh <cf-release-version> <provider>
 
 ex: ./setup.sh 172 1
 
-Enter the password when prompted for.
+Enter the password when prompted.
 
 Logs are located in the same directory -> setup.log
 
@@ -52,3 +52,6 @@ If the script fails due to any reason, look at the errors in the setup.log
 * Look for the Job/s which have the status as failing
 * Run `bosh restart <job-name>`
 
+RoadMap:
+* Enable install on Ubuntu
+* Harden the error handling
