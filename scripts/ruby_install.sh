@@ -28,7 +28,7 @@ else
 	
 	set +e
 	echo "###### Using Ruby $REQUIRED_RUBY_VERSION ######"
-	rvm use $REQUIRED_RUBY_VERSION --default >> $LOG_FILE 2>&1
+	rvm --default use $REQUIRED_RUBY_VERSION >> $LOG_FILE 2>&1
 	logInfo "Defaulted ruby to $REQUIRED_RUBY_VERSION. Close this terminal and open a new one. Fire the setup again."
 	exit 1
 fi
