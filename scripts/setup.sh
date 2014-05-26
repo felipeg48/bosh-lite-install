@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash --login
 
 clear
 unset HISTFILE
@@ -50,28 +50,8 @@ if [ $# -ne 2 ]; then
 	exit 1
 fi
 
-if [[ -n ${1//[0-9]/} ]]; then
-	logError "Invalid cf version number, please try again"
-fi
-
-if [ $2 -eq 1 ] || [ $2 -eq 2 ]; then
-	if [ $2 -eq 1 ]; then 
-		logInfo "Provider selected : Virtual Box" 
-		VIRTUAL_BOX_INSTALLED=`which virtualbox`
-		if [ -z $VIRTUAL_BOX_INSTALLED ]; then
-			logError "VirtualBox not installed. Please download and install it from https://www.virtualbox.org/" 
-		fi
-	else 
-		logInfo "Provider selected : VMWare Fusion."
-		if [ ! -f $BOSH_RELEASES_DIR/license.lic ]; then
-			ERROR_MSG="Please place the license.lic file in $BOSH_RELEASES_DIR" 
-			INFO_MSG="Ensure you have the license.lic available. https://www.vagrantup.com/vmware"			
-			logError ERROR_MSG INFO_MSG
-		fi
-	fi
-else
-	logError "Please provide the valid selection for the provider"
-fi
+set -e
+./validation.sh $1 $2
 
 read -s -p "Enter Password: " PASSWORD
 if [ -z $PASSWORD ]; then
@@ -79,12 +59,6 @@ if [ -z $PASSWORD ]; then
 fi
 
 echo
-
-if [ ! -f "$BOSH_RELEASES_DIR/login.sh" ]; then
-	ERROR_MSG="Dude you don't read instructions"
-	INFO_MSG="Place the login.sh file under $BOSH_RELEASES_DIR/"
-	logError ERROR_MSG INFO_MSG
-fi
 
 cmd=`$BOSH_RELEASES_DIR/login.sh $USER $PASSWORD`
 if [[ $cmd == *Sorry* ]]; then
@@ -100,10 +74,10 @@ if [ -z $VAGRANT_INSTALLED ]; then
 	logError "You don't have vagrant Installed. I knew you would never read instructions. Install that first and then come back."
 fi
 
-./brew_install.sh $OS $PASSWORD
+./brew_install.sh
 
 export CF_RELEASE=cf-$1.yml
-logInfo "Deploy CF release" $CF_RELEASE
+logInfo "Deploy CF release $CF_RELEASE"
 
 echo "###### Clone Required Git Repositories ######"
 if [ ! -d "bosh-lite" ]; then
@@ -121,63 +95,33 @@ fi
 echo "###### Validate the entered cf version ######"
 if [ ! -f $BOSH_RELEASES_DIR/cf-release/releases/$CF_RELEASE ]; then
 	logError "Invalid CF version selected. Please correct and try again"
-fi	
+fi
 
-echo "###### Install RVM and download the appropriate version of Ruby ######"
-RUBY_VERSION_INSTALLED=`ruby -v`
-
-if echo "$RUBY_VERSION_INSTALLED" | grep -q "$EXPECTED_RUBY_VERSION"; then
-	logInfo "Ruby RubyGems Already Installed"
-else	
-	\curl -sSL $RVM_DOWNLOAD_URL | bash >> $LOG_FILE 2>&1
-	if [ $? -gt 0 ]; then
-		echo $PASSWORD | \curl -sSL $RVM_DOWNLOAD_URL | sudo bash >> $LOG_FILE 2>&1
-	fi
-	`source ~/.rvm/scripts/rvm`
-	`type rvm | head -n 1`
-	
-	WHICH_RVM=`which rvm`
-	if [ -z $WHICH_RVM ]; then
-		logInfo "Installed RVM now, please close this terminal and open a new terminal"
-		logInfo "Fire the setup.sh again"
-		exit 1		
-	fi
-	
-	rvm install $REQUIRED_RUBY_VERSION >> $LOG_FILE 2>&1
-	if [ $? -gt 0 ]; then
-		echo $PASSWORD | sudo -S rvm install $REQUIRED_RUBY_VERSION >> $LOG_FILE 2>&1
-	fi
-	
-	if [ $? -gt 0 ]; then
-		logError "Unable to Install ruby"
-	fi	
-fi	
-
-echo "###### Using Ruby $REQUIRED_RUBY_VERSION ######"
-rvm use $REQUIRED_RUBY_VERSION --default
+./ruby_install.sh
 
 echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
 if [ -z $INSTALLED_BUNDLE_VERSION ]; then
 	gem install bundler >> $LOG_FILE 2>&1
-	logInfo "Installed bundler"
-	if [ $? -gt 0 ]; then
-		echo $PASSWORD | sudo -S gem install bundler >> $LOG_FILE 2>&1
-	fi
-	
+
 	if [ $? -gt 0 ]; then
 		logError "Unable to Install bundler"
 	fi
-	
+
+	logInfo "Installed bundler"
 fi
+
+echo "###### Installing BOSH CLI ######"
+gem install bosh_cli >> $LOG_FILE 2>&1
 
 echo "###### Installing wget ######"
 brew install wget >> $LOG_FILE 2>&1
 
 echo "###### Install spiff ######"
-brew tap xoebus/homebrew-cloudfoundry
+brew tap xoebus/homebrew-cloudfoundry &> $LOG_FILE 2>&1
 brew install spiff &> $LOG_FILE 2>&1
 
+echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
 
 echo "###### Pull latest changes (if any) for bosh-lite ######"
@@ -186,13 +130,22 @@ git pull >> $LOG_FILE 2>&1
 echo "###### Download warden ######"
 if [ ! -f $STEM_CELL_TO_INSTALL ]; then
     echo "###### Downloading... warden ######"
-    wget $STEM_CELL_URL -o $LOG_FILE 2>&1
+    wget --progress=bar:force $STEM_CELL_URL -o $LOG_FILE 2>&1
 else 
 	logInfo "Skipping warden download, local copy exists"
 fi
 
 echo "###### Bundle bosh-lite ######"
 bundle &> $LOG_FILE 2>&1
+
+echo "###### Switching to cf-release ######"
+cd $BOSH_RELEASES_DIR/cf-release
+./update &> $LOG_FILE
+echo "###### Bundle cf-release ######"
+bundle &> $LOG_FILE 2>&1
+
+echo "###### Switching to bosh-lite ######"
+cd $BOSH_RELEASES_DIR/bosh-lite
 
 PLUGIN_INSTALLED=false
 VMWARE_PLUGIN_INSTALLED=`vagrant plugin list`
@@ -222,9 +175,10 @@ else
 	vagrant up --provider vmware_fusion >> $LOG_FILE 2>&1
 fi
 
-set +e
-
-rvm gemset use bosh-lite
+BOSH_INSTALLED=`which bosh`
+if [ -z $BOSH_INSTALLED ]; then
+	logError "Bosh command not found, please fire rvm gemset use bosh-lite"
+fi
 
 echo "###### Target BOSH to BOSH director ######"
 bosh target $BOSH_DIRECTOR_URL
@@ -235,25 +189,24 @@ bosh login $BOSH_USER $BOSH_PASSWORD
 echo "###### Set the routing tables ######"
 echo $PASSWORD | sudo -S scripts/add-route >> $LOG_FILE 2>&1
 
+set +e
 echo "###### Upload stemcell ######"
 bosh upload stemcell $BOSH_RELEASES_DIR/bosh-lite/$STEM_CELL_TO_INSTALL >> $LOG_FILE 2>&1
 
 STEM_CELL_NAME=$( bosh stemcells | grep -o "bosh-warden-[^[:space:]]*" )
 echo "###### Uploaded stemcell $STEM_CELL_NAME ######"
 
-echo "###### Update cf-release repo ######"
+echo "###### Switching to cf-release ######"
 cd $BOSH_RELEASES_DIR/cf-release
-./update &> $LOG_FILE
-
-rvm gemset use bosh-lite
-echo "###### Bundle cf-release ######"
-bundle &> $LOG_FILE 2>&1
 
 echo "###### Upload cf-release" $CF_RELEASE "######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
 
-echo "###### Generate a manifest at manifests/cf-manifest.yml ######"
+set -e
+echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
+
+echo "###### Generate a manifest at manifests/cf-manifest.yml ######"
 ./scripts/make_manifest_spiff &> $LOG_FILE 2>&1
 
 echo "###### Deploy the manifest manifests/cf-manifest.yml ######"
@@ -277,8 +230,6 @@ if [ -z $GO_CF_VERSION ]; then
 fi
 
 echo $PASSWORD | sudo -S ln -s /usr/local/bin/cf /usr/local/bin/gcf
-
-set -e
 
 echo "###### Setting up cf (Create org, spaces) ######"
 gcf api --skip-ssl-validation $CLOUD_CONTROLLER_URL
