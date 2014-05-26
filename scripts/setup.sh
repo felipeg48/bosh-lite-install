@@ -111,6 +111,9 @@ if [ -z $INSTALLED_BUNDLE_VERSION ]; then
 	logInfo "Installed bundler"
 fi
 
+echo "###### Installing BOSH CLI ######"
+gem install bosh_cli >> $LOG_FILE 2>&1
+
 echo "###### Installing wget ######"
 brew install wget >> $LOG_FILE 2>&1
 
@@ -177,7 +180,6 @@ if [ -z $BOSH_INSTALLED ]; then
 	logError "Bosh command not found, please fire rvm gemset use bosh-lite"
 fi
 
-set +e
 echo "###### Target BOSH to BOSH director ######"
 bosh target $BOSH_DIRECTOR_URL
 
@@ -187,6 +189,7 @@ bosh login $BOSH_USER $BOSH_PASSWORD
 echo "###### Set the routing tables ######"
 echo $PASSWORD | sudo -S scripts/add-route >> $LOG_FILE 2>&1
 
+set +e
 echo "###### Upload stemcell ######"
 bosh upload stemcell $BOSH_RELEASES_DIR/bosh-lite/$STEM_CELL_TO_INSTALL >> $LOG_FILE 2>&1
 
@@ -195,13 +198,14 @@ echo "###### Uploaded stemcell $STEM_CELL_NAME ######"
 
 echo "###### Switching to cf-release ######"
 cd $BOSH_RELEASES_DIR/cf-release
-rvm gemset use bosh-lite
 
 echo "###### Upload cf-release" $CF_RELEASE "######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
 
-echo "###### Generate a manifest at manifests/cf-manifest.yml ######"
+echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
+
+echo "###### Generate a manifest at manifests/cf-manifest.yml ######"
 ./scripts/make_manifest_spiff &> $LOG_FILE 2>&1
 
 echo "###### Deploy the manifest manifests/cf-manifest.yml ######"
