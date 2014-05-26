@@ -97,21 +97,18 @@ if [ ! -f $BOSH_RELEASES_DIR/cf-release/releases/$CF_RELEASE ]; then
 	logError "Invalid CF version selected. Please correct and try again"
 fi
 
-./ruby_install.sh $PASSWORD
+./ruby_install.sh
 
 echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
 if [ -z $INSTALLED_BUNDLE_VERSION ]; then
 	gem install bundler >> $LOG_FILE 2>&1
-	logInfo "Installed bundler"
-	if [ $? -gt 0 ]; then
-		echo $PASSWORD | sudo -S gem install bundler >> $LOG_FILE 2>&1
-	fi
-	
+
 	if [ $? -gt 0 ]; then
 		logError "Unable to Install bundler"
 	fi
-	
+
+	logInfo "Installed bundler"
 fi
 
 echo "###### Installing wget ######"
@@ -129,7 +126,7 @@ git pull >> $LOG_FILE 2>&1
 echo "###### Download warden ######"
 if [ ! -f $STEM_CELL_TO_INSTALL ]; then
     echo "###### Downloading... warden ######"
-    wget $STEM_CELL_URL -o $LOG_FILE 2>&1
+    wget --progress=bar:force $STEM_CELL_URL -o $LOG_FILE 2>&1
 else 
 	logInfo "Skipping warden download, local copy exists"
 fi
