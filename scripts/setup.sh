@@ -99,8 +99,6 @@ fi
 
 ./ruby_install.sh
 
-xcode-select --install
-
 echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
 if [ -z $INSTALLED_BUNDLE_VERSION ]; then

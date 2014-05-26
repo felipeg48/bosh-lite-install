@@ -12,6 +12,8 @@ You will be prompted to type in your password for HomeBrew install.
 
 If you don't have RVM installed already, the script will install one, and you'll have to open a new terminal and fire the setup again.
 
+Run xcode-select --install from terminal to install xcode command line tools.
+
 Install [Vagrant] (http://www.vagrantup.com/)
 
 Install [VirtualBox] (https://www.virtualbox.org/) if you don't have [VMWare Fusion] (http://www.vmware.com/products/fusion-professional)
