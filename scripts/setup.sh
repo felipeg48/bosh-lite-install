@@ -99,6 +99,8 @@ fi
 
 ./ruby_install.sh
 
+xcode-select --install
+
 echo "###### Installing Bundler ######"
 INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
 if [ -z $INSTALLED_BUNDLE_VERSION ]; then
@@ -118,6 +120,7 @@ echo "###### Install spiff ######"
 brew tap xoebus/homebrew-cloudfoundry &> $LOG_FILE 2>&1
 brew install spiff &> $LOG_FILE 2>&1
 
+echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
 
 echo "###### Pull latest changes (if any) for bosh-lite ######"
@@ -133,6 +136,15 @@ fi
 
 echo "###### Bundle bosh-lite ######"
 bundle &> $LOG_FILE 2>&1
+
+echo "###### Switching to cf-release ######"
+cd $BOSH_RELEASES_DIR/cf-release
+./update &> $LOG_FILE
+echo "###### Bundle cf-release ######"
+bundle &> $LOG_FILE 2>&1
+
+echo "###### Switching to bosh-lite ######"
+cd $BOSH_RELEASES_DIR/bosh-lite
 
 PLUGIN_INSTALLED=false
 VMWARE_PLUGIN_INSTALLED=`vagrant plugin list`
@@ -162,10 +174,12 @@ else
 	vagrant up --provider vmware_fusion >> $LOG_FILE 2>&1
 fi
 
+BOSH_INSTALLED=`which bosh`
+if [ -z $BOSH_INSTALLED ]; then
+	logError "Bosh command not found, please fire rvm gemset use bosh-lite"
+fi
+
 set +e
-
-rvm gemset use bosh-lite
-
 echo "###### Target BOSH to BOSH director ######"
 bosh target $BOSH_DIRECTOR_URL
 
@@ -181,13 +195,9 @@ bosh upload stemcell $BOSH_RELEASES_DIR/bosh-lite/$STEM_CELL_TO_INSTALL >> $LOG_
 STEM_CELL_NAME=$( bosh stemcells | grep -o "bosh-warden-[^[:space:]]*" )
 echo "###### Uploaded stemcell $STEM_CELL_NAME ######"
 
-echo "###### Update cf-release repo ######"
+echo "###### Switching to cf-release ######"
 cd $BOSH_RELEASES_DIR/cf-release
-./update &> $LOG_FILE
-
 rvm gemset use bosh-lite
-echo "###### Bundle cf-release ######"
-bundle &> $LOG_FILE 2>&1
 
 echo "###### Upload cf-release" $CF_RELEASE "######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
