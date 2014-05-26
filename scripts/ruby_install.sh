@@ -4,7 +4,6 @@
 echo "###### Install RVM and download the appropriate version of Ruby ######"
 RUBY_VERSION_INSTALLED=`ruby -v`
 
-set -e
 WHICH_RVM=`which rvm`
 if [ -z $WHICH_RVM ]; then
 	\curl -sSL $RVM_DOWNLOAD_URL | bash >> $LOG_FILE 2>&1

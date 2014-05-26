@@ -8,7 +8,7 @@ if [ -z $BREW_INSTALLED ]; then
 	logCustom 15 "You dont have homebrew Installed. I knew you never read instructions. I have to install this for you now! Phew!!"
 	if [ "$OS" == "Darwin" ]; then
 		logInfo "Installing HomeBrew on Mac"
-		logCustom 6 "You will have to enter your password again when prompted for"
+		logCustom 6 "Enter you password when prompted"
 		echo "" | ruby -e "$(curl -fsSL $HOMEBREW_DOWNLOAD_URL)"
 		
 		BREW_INSTALLED=`which brew`
