@@ -8,6 +8,10 @@ Ensure the script has executable permissions. If not -> chmod +x setup.sh
 
 Before you fire the script, please ensure you have [HomeBrew] (http://brew.sh/) install. If not, the setup script will install it on your behalf.
 
+You will be prompted to type in your password for HomeBrew install.
+
+If you don't have RVM installed already, the script will install one, and you'll have to open a new terminal and fire the setup again.
+
 Install [Vagrant] (http://www.vagrantup.com/)
 
 Install [VirtualBox] (https://www.virtualbox.org/) if you don't have [VMWare Fusion] (http://www.vmware.com/products/fusion-professional)

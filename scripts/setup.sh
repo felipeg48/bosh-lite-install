@@ -74,7 +74,7 @@ if [ -z $VAGRANT_INSTALLED ]; then
 	logError "You don't have vagrant Installed. I knew you would never read instructions. Install that first and then come back."
 fi
 
-./brew_install.sh $OS $PASSWORD
+./brew_install.sh
 
 export CF_RELEASE=cf-$1.yml
 logInfo "Deploy CF release $CF_RELEASE"
