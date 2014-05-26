@@ -6,6 +6,7 @@ RUBY_VERSION_INSTALLED=`ruby -v`
 
 WHICH_RVM=`which rvm`
 if [ -z $WHICH_RVM ]; then
+	logCustom 9 "RVM not found. I knew you would never read the instructions. I have to install this for you now! Phew!!"
 	\curl -sSL $RVM_DOWNLOAD_URL | bash >> $LOG_FILE 2>&1
 	
 	echo "Setting RVM for use in this bash session"
@@ -17,7 +18,8 @@ fi
 
 if echo "$RUBY_VERSION_INSTALLED" | grep -q "$EXPECTED_RUBY_VERSION"; then
 	logInfo "Ruby RubyGems Already Installed"
-else		
+else
+	logCustom 9 "Ruby not found. I knew you would never read the instructions. I have to install this for you now! Phew!!"		
 	rvm install $REQUIRED_RUBY_VERSION >> $LOG_FILE 2>&1
 	
 	if [ $? -gt 0 ]; then
