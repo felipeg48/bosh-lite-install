@@ -202,6 +202,7 @@ cd $BOSH_RELEASES_DIR/cf-release
 echo "###### Upload cf-release" $CF_RELEASE "######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
 
+set -e
 echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
 
@@ -229,8 +230,6 @@ if [ -z $GO_CF_VERSION ]; then
 fi
 
 echo $PASSWORD | sudo -S ln -s /usr/local/bin/cf /usr/local/bin/gcf
-
-set -e
 
 echo "###### Setting up cf (Create org, spaces) ######"
 gcf api --skip-ssl-validation $CLOUD_CONTROLLER_URL
