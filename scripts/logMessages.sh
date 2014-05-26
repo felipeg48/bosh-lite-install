@@ -1,8 +1,8 @@
 logError () {
 	logCustom 1 "ERROR: $1"
 	
-	if [ ! -z $2 ]; then
-		logInfo $2
+	if [[ ! -z "$2" ]]; then
+		logInfo "$2"
 	fi	
 
 	echo ">>>>>>>>>> End time: $(date) <<<<<<<<<<<<"
