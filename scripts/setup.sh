@@ -202,7 +202,7 @@ echo "###### Uploaded stemcell $STEM_CELL_NAME ######"
 echo "###### Switching to cf-release ######"
 cd $BOSH_RELEASES_DIR/cf-release
 
-echo "###### Upload cf-release" $CF_RELEASE "######"
+logCustom 9 "###### Upload cf-release $CF_RELEASE ######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
 
 set -e
@@ -217,9 +217,11 @@ bosh deployment manifests/cf-manifest.yml &> $LOG_FILE 2>&1
 
 #sed -i.bak 's/bosh-warden-boshlite-ubuntu/'"$STEM_CELL_NAME"'/' $PWD/manifests/cf-manifest.yml
 
+set +e
 logCustom 9 "###### Deploy CF to BOSH-LITE (THIS WOULD TAKE SOME TIME) ######"
 echo "yes" | bosh deploy &> $LOG_FILE 2>&1
 
+set -e
 echo "###### Executing BOSH VMS to ensure all VMS are running ######"
 BOSH_VMS_INSTALLED_SUCCESSFULLY=$( bosh vms | grep -o "failing" )
 if [ ! -z $BOSH_VMS_INSTALLED_SUCCESSFULLY]; then
@@ -232,8 +234,10 @@ if [ -z $GO_CF_VERSION ]; then
 	brew install cloudfoundry-cli
 fi
 
+set +e
 echo $PASSWORD | sudo -S ln -s /usr/local/bin/cf /usr/local/bin/gcf
 
+set -e
 echo "###### Setting up cf (Create org, spaces) ######"
 gcf api --skip-ssl-validation $CLOUD_CONTROLLER_URL
 gcf auth $CF_USER $CF_PASSWORD
