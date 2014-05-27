@@ -140,7 +140,10 @@ bundle &> $LOG_FILE 2>&1
 
 echo "###### Switching to cf-release ######"
 cd $BOSH_RELEASES_DIR/cf-release
+
+echo "###### Update cf-release to sync the sub-modules ######"
 ./update &> $LOG_FILE
+
 echo "###### Bundle cf-release ######"
 bundle &> $LOG_FILE 2>&1
 
