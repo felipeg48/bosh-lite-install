@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash --login
 . logMessages.sh
 
 echo "###### Install RVM and download the appropriate version of Ruby ######"
@@ -29,6 +29,7 @@ else
 	set +e
 	echo "###### Using Ruby $REQUIRED_RUBY_VERSION ######"
 	rvm --default use $REQUIRED_RUBY_VERSION >> $LOG_FILE 2>&1
-	logInfo "Defaulted ruby to $REQUIRED_RUBY_VERSION. Close this terminal and open a new one. Fire the setup again."
+	logSuccess "Successfully set ruby to $REQUIRED_RUBY_VERSION." 
+	logInfo "Close this terminal and open a new one. Fire the setup again."
 	exit 1
 fi
