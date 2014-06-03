@@ -30,9 +30,6 @@ export AWS_STEM_CELL_URL=http://bosh-jenkins-gems-warden.s3.amazonaws.com/stemce
 export STEM_CELL_TO_INSTALL=latest-bosh-stemcell-warden.tgz
 export STEM_CELL_URL=$AWS_STEM_CELL_URL/$STEM_CELL_TO_INSTALL
 
-export REQUIRED_RUBY_VERSION=1.9.3-p484
-export EXPECTED_RUBY_VERSION="1.9.3"
-
 export VAGRANT_VERSION=1.6.2
 
 export RVM_DOWNLOAD_URL=https://get.rvm.io
@@ -92,38 +89,39 @@ if [ ! -d "cf-acceptance-tests" ]; then
 	git clone $CF_ACCEPTANCE_TESTS_REPO cf-acceptance-tests >> $LOG_FILE 2>&1
 fi
 
+cd ${BOSH_RELEASES_DIR}/cf-release/releases -regex 
+MOST_RECENT_CF_RELEASE=$(find ".*cf-[0-9]\{3\}.yml" | sort | tail -n 1)
+echo "$MOST_RECENT_CF_RELEASE this is the most recent release"
+
+exit 1
 echo "###### Validate the entered cf version ######"
 if [ ! -f $BOSH_RELEASES_DIR/cf-release/releases/$CF_RELEASE ]; then
 	logError "Invalid CF version selected. Please correct and try again"
 fi
 
+export EXPECTED_RUBY_VERSION_BOSH=`cat $BOSH_RELEASES_DIR/bosh-lite/.ruby-version`
+export EXPECTED_RUBY_VERSION_CF_RELEASE=`cat $BOSH_RELEASES_DIR/cf-release/.ruby-version`
+
 ./ruby_install.sh
 
-echo "###### Installing Bundler ######"
-INSTALLED_BUNDLE_VERSION=`which bundle` >> $LOG_FILE 2>&1
-if [ -z $INSTALLED_BUNDLE_VERSION ]; then
-	gem install bundler >> $LOG_FILE 2>&1
-
-	if [ $? -gt 0 ]; then
-		logError "Unable to Install bundler"
-	fi
-
-	logInfo "Installed bundler"
+INSTALLED_WGET=`which wget`
+if [ -z "$INSTALLED_WGET" ]; then
+	echo "###### Installing wget ######"
+	brew install wget >> $LOG_FILE 2>&1
 fi
 
-echo "###### Installing BOSH CLI ######"
-gem install bosh_cli >> $LOG_FILE 2>&1
+INSTALLED_SPIFF=`which spiff`
+if [ -z "$INSTALLED_SPIFF" ]; then
+	echo "###### Install spiff ######"
+	brew tap xoebus/homebrew-cloudfoundry &> $LOG_FILE 2>&1
+	brew install spiff &> $LOG_FILE 2>&1
+fi
 
-echo "###### Installing wget ######"
-brew install wget >> $LOG_FILE 2>&1
-
-echo "###### Install spiff ######"
-brew tap xoebus/homebrew-cloudfoundry &> $LOG_FILE 2>&1
-brew install spiff &> $LOG_FILE 2>&1
-
+set +e
 echo "###### Switching to bosh-lite ######"
-cd $BOSH_RELEASES_DIR/bosh-lite
+cd $BOSH_RELEASES_DIR/bosh-lite  &> $LOG_FILE 2>&1
 
+set -e
 echo "###### Pull latest changes (if any) for bosh-lite ######"
 git pull >> $LOG_FILE 2>&1
 
@@ -138,8 +136,11 @@ fi
 echo "###### Bundle bosh-lite ######"
 bundle &> $LOG_FILE 2>&1
 
+set +e
 echo "###### Switching to cf-release ######"
 cd $BOSH_RELEASES_DIR/cf-release
+
+set -e
 
 echo "###### Update cf-release to sync the sub-modules ######"
 ./update &> $LOG_FILE
@@ -147,9 +148,11 @@ echo "###### Update cf-release to sync the sub-modules ######"
 echo "###### Bundle cf-release ######"
 bundle &> $LOG_FILE 2>&1
 
+set +e
 echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
 
+set -e
 PLUGIN_INSTALLED=false
 VMWARE_PLUGIN_INSTALLED=`vagrant plugin list`
 STRING_TO_LOOK_FOR="vagrant-vmware-fusion"
@@ -179,7 +182,7 @@ else
 fi
 
 BOSH_INSTALLED=`which bosh`
-if [ -z $BOSH_INSTALLED ]; then
+if [ -z "$BOSH_INSTALLED" ]; then
 	logError "Bosh command not found, please fire rvm gemset use bosh-lite"
 fi
 
@@ -194,7 +197,7 @@ echo $PASSWORD | sudo -S scripts/add-route >> $LOG_FILE 2>&1
 
 set +e
 echo "###### Upload stemcell ######"
-bosh upload stemcell $BOSH_RELEASES_DIR/bosh-lite/$STEM_CELL_TO_INSTALL >> $LOG_FILE 2>&1
+bosh upload stemcell --skip-if-exists $BOSH_RELEASES_DIR/bosh-lite/$STEM_CELL_TO_INSTALL >> $LOG_FILE 2>&1
 
 STEM_CELL_NAME=$( bosh stemcells | grep -o "bosh-warden-[^[:space:]]*" )
 echo "###### Uploaded stemcell $STEM_CELL_NAME ######"
@@ -205,10 +208,10 @@ cd $BOSH_RELEASES_DIR/cf-release
 logCustom 9 "###### Upload cf-release $CF_RELEASE ######"
 bosh upload release releases/$CF_RELEASE &> $LOG_FILE 2>&1
 
-set -e
 echo "###### Switching to bosh-lite ######"
 cd $BOSH_RELEASES_DIR/bosh-lite
 
+set -e
 echo "###### Generate a manifest at manifests/cf-manifest.yml ######"
 ./scripts/make_manifest_spiff &> $LOG_FILE 2>&1
 
@@ -224,13 +227,13 @@ echo "yes" | bosh deploy &> $LOG_FILE 2>&1
 set -e
 echo "###### Executing BOSH VMS to ensure all VMS are running ######"
 BOSH_VMS_INSTALLED_SUCCESSFULLY=$( bosh vms | grep -o "failing" )
-if [ ! -z $BOSH_VMS_INSTALLED_SUCCESSFULLY]; then
+if [ ! -z "$BOSH_VMS_INSTALLED_SUCCESSFULLY" ]; then
 	logError "Not all BOSH VMs are up. Please check logs for more info"
 fi
 
 echo "###### Setup cloudfoundry cli ######"
 GO_CF_VERSION=`which gcf`
-if [ -z $GO_CF_VERSION ]; then
+if [ -z "$GO_CF_VERSION" ]; then
 	brew install cloudfoundry-cli
 fi
 
