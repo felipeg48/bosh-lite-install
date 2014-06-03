@@ -89,11 +89,6 @@ if [ ! -d "cf-acceptance-tests" ]; then
 	git clone $CF_ACCEPTANCE_TESTS_REPO cf-acceptance-tests >> $LOG_FILE 2>&1
 fi
 
-cd ${BOSH_RELEASES_DIR}/cf-release/releases -regex 
-MOST_RECENT_CF_RELEASE=$(find ".*cf-[0-9]\{3\}.yml" | sort | tail -n 1)
-echo "$MOST_RECENT_CF_RELEASE this is the most recent release"
-
-exit 1
 echo "###### Validate the entered cf version ######"
 if [ ! -f $BOSH_RELEASES_DIR/cf-release/releases/$CF_RELEASE ]; then
 	logError "Invalid CF version selected. Please correct and try again"
